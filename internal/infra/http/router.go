@@ -48,7 +48,7 @@ func Router(cont container.Container) http.Handler {
 			apiRouter.Group(func(apiRouter chi.Router) {
 				apiRouter.Use(cont.AuthMw)
 
-				UserRouter(apiRouter, cont.UserController)
+				LocationRouter(apiRouter, cont.LocationController)
 
 				apiRouter.Handle("/*", NotFoundJSON())
 			})
@@ -101,6 +101,35 @@ func UserRouter(r chi.Router, uc controllers.UserController) {
 		apiRouter.Delete(
 			"/",
 			uc.Delete(),
+		)
+	})
+}
+
+func LocationRouter(r chi.Router, lc controllers.LocationController) {
+	r.Route("/locations", func(apiRouter chi.Router) {
+		apiRouter.Post(
+			"/create",
+			lc.Save(),
+		)
+		apiRouter.Get(
+			"/detail/{id}",
+			lc.Detail(),
+		)
+		apiRouter.Get(
+			"/by-user-id/{id}",
+			lc.FindByUserId(),
+		)
+		apiRouter.Post(
+			"/in-area",
+			lc.FindByArea(),
+		)
+		apiRouter.Post(
+			"/update/{id}",
+			lc.Update(),
+		)
+		apiRouter.Post(
+			"/delete/{id}",
+			lc.Delete(),
 		)
 	})
 }

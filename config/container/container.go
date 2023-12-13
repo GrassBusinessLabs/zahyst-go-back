@@ -29,11 +29,13 @@ type Middlewares struct {
 type Services struct {
 	app.AuthService
 	app.UserService
+	app.LocationService
 }
 
 type Controllers struct {
 	controllers.AuthController
 	controllers.UserController
+	controllers.LocationController
 }
 
 func New(conf config.Configuration) Container {
@@ -42,12 +44,15 @@ func New(conf config.Configuration) Container {
 
 	userRepository := database.NewUserRepository(sess)
 	sessionRepository := database.NewSessRepository(sess)
+	locationRepository := database.NewLocationRepository(sess)
 
 	userService := app.NewUserService(userRepository)
 	authService := app.NewAuthService(sessionRepository, userService, conf, tknAuth)
+	locationService := app.NewLocationService(locationRepository)
 
 	authController := controllers.NewAuthController(authService, userService)
 	userController := controllers.NewUserController(userService)
+	locationController := controllers.NewLocationController(locationService)
 
 	authMiddleware := middlewares.AuthMiddleware(tknAuth, authService, userService)
 
@@ -58,10 +63,12 @@ func New(conf config.Configuration) Container {
 		Services: Services{
 			authService,
 			userService,
+			locationService,
 		},
 		Controllers: Controllers{
 			authController,
 			userController,
+			locationController,
 		},
 	}
 }
