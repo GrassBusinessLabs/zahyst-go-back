@@ -2,7 +2,6 @@ package database
 
 import (
 	"boilerplate/internal/domain"
-	"errors"
 	"math"
 	"time"
 
@@ -25,9 +24,8 @@ type location struct {
 
 type LocationRepository interface {
 	Save(sess domain.Location) (domain.Location, error)
-	Update(location domain.Location, userId uint64) (domain.Location, error)
-	Delete(id uint64, userId uint64) error
-	Detail(id uint64) (domain.Location, error)
+	Update(location domain.Location) (domain.Location, error)
+	Delete(id uint64) error
 	FindByArea(p domain.Pagination, area_points domain.AreaPoints) (domain.Locations, error)
 	FindByUserId(p domain.Pagination, user_id uint64) (domain.Locations, error)
 	FindById(id uint64) (domain.Location, error)
@@ -53,12 +51,9 @@ func (r locationRepository) Save(location domain.Location) (domain.Location, err
 	return r.mapModelToDomain(loc), nil
 }
 
-func (r locationRepository) Update(location domain.Location, userId uint64) (domain.Location, error) {
+func (r locationRepository) Update(location domain.Location) (domain.Location, error) {
 	loc := r.mapDomainToModel(location)
 	loc.UpdatedDate = time.Now()
-	if loc.UserId != userId {
-		return location, errors.New("Invalid user")
-	}
 	err := r.coll.Find(db.Cond{"id": loc.Id}).Update(&loc)
 	if err != nil {
 		return domain.Location{}, err
@@ -66,24 +61,8 @@ func (r locationRepository) Update(location domain.Location, userId uint64) (dom
 	return r.mapModelToDomain(loc), nil
 }
 
-func (r locationRepository) Detail(id uint64) (domain.Location, error) {
-	location, err := r.FindById(id)
-	if err != nil {
-		return domain.Location{}, err
-	}
-	return location, nil
-}
-
-func (r locationRepository) Delete(id uint64, userId uint64) error {
-	location := r.coll.Find(db.Cond{"id": id, "user_id": userId, "deleted_date": nil})
-	exists, err := location.Exists()
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return errors.New("No such location")
-	}
-	return location.Update(map[string]interface{}{"deleted_date": time.Now()})
+func (r locationRepository) Delete(id uint64) error {
+	return r.coll.Find(db.Cond{"id": id, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
 }
 
 func (r locationRepository) FindByArea(p domain.Pagination, area_points domain.AreaPoints) (domain.Locations, error) {

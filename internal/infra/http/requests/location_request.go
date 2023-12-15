@@ -19,10 +19,8 @@ type UpdateLocationRequest struct {
 }
 
 type FindByAreaLocationRequest struct {
-	Lat1 float32 `json:"lat1" validate:"required"`
-	Lon1 float32 `json:"lon1" validate:"required"`
-	Lat2 float32 `json:"lat2" validate:"required"`
-	Lon2 float32 `json:"lon2" validate:"required"`
+	UpperLeftPoint   map[string]float32 `json:"upper_left_point" validate:"required"`
+	BottomRightPoint map[string]float32 `json:"bottom_right_point" validate:"required"`
 }
 
 func (r CreateLocationRequest) ToDomainModel() (interface{}, error) {
@@ -45,9 +43,9 @@ func (r UpdateLocationRequest) ToDomainModel() (interface{}, error) {
 
 func (r FindByAreaLocationRequest) ToDomainModel() (interface{}, error) {
 	return domain.AreaPoints{
-		Lat1: r.Lat1,
-		Lon1: r.Lon1,
-		Lat2: r.Lat2,
-		Lon2: r.Lon2,
+		Lat1: r.UpperLeftPoint["lat"],
+		Lon1: r.UpperLeftPoint["lon"],
+		Lat2: r.BottomRightPoint["lat"],
+		Lon2: r.BottomRightPoint["lon"],
 	}, nil
 }

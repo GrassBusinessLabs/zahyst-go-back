@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,13 +12,20 @@ import (
 define your own type to avoid collisions */
 // type CtxStrKey string
 
-type ctxKey struct {
-	name string
+type CtxKey struct {
+	Name string
+}
+
+type Userable interface {
+	GetUserId() uint64
 }
 
 var (
-	UserKey = ctxKey{name: "user"}
-	SessKey = ctxKey{name: "sess"}
+	UserKey     = CtxKey{Name: "user"}
+	SessKey     = CtxKey{Name: "sess"}
+	LocationKey = CtxKey{Name: "location"}
+
+	PathGuid = CtxKey{Name: "guid"}
 )
 
 func Ok(w http.ResponseWriter) {
@@ -115,4 +123,8 @@ func Unauthorized(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusUnauthorized)
 
 	encodeErrorBody(w, err)
+}
+
+func GetPathValFromCtx[domainType Userable](ctx context.Context, key CtxKey) Userable {
+	return ctx.Value(key).(Userable)
 }

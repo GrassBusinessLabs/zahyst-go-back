@@ -21,3 +21,7 @@ type Locations struct {
 	Total uint64
 	Pages uint
 }
+
+func (loc Location) GetUserId() uint64 {
+	return loc.UserId
+}

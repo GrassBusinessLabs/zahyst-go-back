@@ -3,7 +3,10 @@ package http
 import (
 	"boilerplate/config"
 	"boilerplate/config/container"
+	"boilerplate/internal/app"
+	"boilerplate/internal/domain"
 	"boilerplate/internal/infra/http/controllers"
+	"boilerplate/internal/infra/http/middlewares"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -48,7 +51,7 @@ func Router(cont container.Container) http.Handler {
 			apiRouter.Group(func(apiRouter chi.Router) {
 				apiRouter.Use(cont.AuthMw)
 
-				LocationRouter(apiRouter, cont.LocationController)
+				LocationRouter(apiRouter, cont.LocationController, cont.LocationService)
 
 				apiRouter.Handle("/*", NotFoundJSON())
 			})
@@ -105,30 +108,32 @@ func UserRouter(r chi.Router, uc controllers.UserController) {
 	})
 }
 
-func LocationRouter(r chi.Router, lc controllers.LocationController) {
+func LocationRouter(r chi.Router, lc controllers.LocationController, ls app.LocationService) {
 	r.Route("/locations", func(apiRouter chi.Router) {
+		lpom := middlewares.PathObject("locationId", controllers.LocationKey, ls)
+		omw := middlewares.IsOwnerMiddleware[domain.Location](controllers.LocationKey)
 		apiRouter.Post(
-			"/create",
+			"/",
 			lc.Save(),
 		)
 		apiRouter.Get(
-			"/detail/{id}",
-			lc.Detail(),
-		)
-		apiRouter.Get(
-			"/by-user-id/{id}",
+			"/my",
 			lc.FindByUserId(),
 		)
 		apiRouter.Post(
 			"/in-area",
 			lc.FindByArea(),
 		)
-		apiRouter.Post(
-			"/update/{id}",
+		apiRouter.With(lpom).Get(
+			"/{locationId}",
+			lc.Detail(),
+		)
+		apiRouter.With(lpom, omw).Put(
+			"/{locationId}",
 			lc.Update(),
 		)
-		apiRouter.Post(
-			"/delete/{id}",
+		apiRouter.With(lpom, omw).Delete(
+			"/{locationId}",
 			lc.Delete(),
 		)
 	})

@@ -7,9 +7,6 @@ import (
 	"boilerplate/internal/infra/http/resources"
 	"log"
 	"net/http"
-	"strconv"
-
-	"github.com/go-chi/chi/v5"
 )
 
 type LocationController struct {
@@ -46,17 +43,14 @@ func (c LocationController) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		location, err := requests.Bind(r, requests.UpdateLocationRequest{}, domain.Location{})
 		if err != nil {
-			log.Printf("UserController: %s", err)
+			log.Printf("LocationController: %s", err)
 			BadRequest(w, err)
 			return
 		}
-		idParam := chi.URLParam(r, "id")
-		id, err := strconv.ParseUint(idParam, 0, 64)
-		userId := r.Context().Value(UserKey).(domain.User).Id
-		location_instance, err := c.locationService.FindById(id)
-		location.UserId = location_instance.UserId
-		location.Id = id
-		location, err = c.locationService.Update(location, userId)
+		instance := r.Context().Value(LocationKey).(domain.Location)
+		location.UserId = instance.UserId
+		location.Id = instance.Id
+		location, err = c.locationService.Update(location)
 		if err != nil {
 			log.Printf("LocationController: %s", err)
 			InternalServerError(w, err)
@@ -69,14 +63,7 @@ func (c LocationController) Update() http.HandlerFunc {
 
 func (c LocationController) Detail() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		idParam := chi.URLParam(r, "id")
-		id, err := strconv.ParseUint(idParam, 0, 64)
-		location, err := c.locationService.Detail(id)
-		if err != nil {
-			log.Printf("LocationController: %s", err)
-			InternalServerError(w, err)
-			return
-		}
+		location := r.Context().Value(LocationKey).(domain.Location)
 		var locationDto resources.LocationDto
 		Success(w, locationDto.DomainToDto(location))
 	}
@@ -84,10 +71,8 @@ func (c LocationController) Detail() http.HandlerFunc {
 
 func (c LocationController) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		idParam := chi.URLParam(r, "id")
-		id, err := strconv.ParseUint(idParam, 0, 64)
-		userId := r.Context().Value(UserKey).(domain.User).Id
-		err = c.locationService.Delete(id, userId)
+		locationId := r.Context().Value(LocationKey).(domain.Location).Id
+		err := c.locationService.Delete(locationId)
 		if err != nil {
 			log.Printf("LocationController: %s", err)
 			InternalServerError(w, err)
@@ -101,7 +86,6 @@ func (c LocationController) Delete() http.HandlerFunc {
 func (c LocationController) FindByArea() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pagination, err := requests.DecodePaginationQuery(r)
-
 		if err != nil {
 			log.Printf("LocationController: %s", err)
 			InternalServerError(w, err)
@@ -131,13 +115,7 @@ func (c LocationController) FindByUserId() http.HandlerFunc {
 			InternalServerError(w, err)
 			return
 		}
-		userIdParam := chi.URLParam(r, "id")
-		userId, err := strconv.ParseUint(userIdParam, 0, 64)
-		if err != nil {
-			log.Printf("LocationController: %s", err)
-			InternalServerError(w, err)
-			return
-		}
+		userId := r.Context().Value(UserKey).(domain.User).Id
 		locations, err := c.locationService.FindByUserId(pagination, userId)
 		if err != nil {
 			log.Printf("LocationController: %s", err)
