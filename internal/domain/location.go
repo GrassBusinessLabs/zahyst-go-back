@@ -9,6 +9,8 @@ type Location struct {
 	UserId      uint64
 	Type        string
 	Address     string
+	Title       string
+	Description string
 	Lat         float64
 	Lon         float64
 	CreatedDate time.Time

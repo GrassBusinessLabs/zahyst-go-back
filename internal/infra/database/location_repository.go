@@ -15,6 +15,8 @@ type location struct {
 	UserId      uint64     `db:"user_id,omitempty"`
 	Type        string     `db:"type"`
 	Address     string     `db:"address"`
+	Title       string     `db:"title"`
+	Description string     `db:"description"`
 	Lat         float64    `db:"lat"`
 	Lon         float64    `db:"lon"`
 	CreatedDate time.Time  `db:"created_date,omitempty"`
@@ -124,6 +126,8 @@ func (r locationRepository) mapDomainToModel(d domain.Location) location {
 		UserId:      d.UserId,
 		Type:        d.Type,
 		Address:     d.Address,
+		Title:       d.Title,
+		Description: d.Description,
 		Lat:         d.Lat,
 		Lon:         d.Lon,
 		CreatedDate: d.CreatedDate,
@@ -138,6 +142,8 @@ func (r locationRepository) mapModelToDomain(m location) domain.Location {
 		UserId:      m.UserId,
 		Type:        m.Type,
 		Address:     m.Address,
+		Title:       m.Title,
+		Description: m.Description,
 		Lat:         m.Lat,
 		Lon:         m.Lon,
 		CreatedDate: m.CreatedDate,
