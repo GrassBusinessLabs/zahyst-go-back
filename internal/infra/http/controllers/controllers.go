@@ -21,9 +21,11 @@ type Userable interface {
 }
 
 var (
-	UserKey     = CtxKey{Name: "user"}
-	SessKey     = CtxKey{Name: "sess"}
-	LocationKey = CtxKey{Name: "location"}
+	UserKey        = CtxKey{Name: "user"}
+	SessKey        = CtxKey{Name: "sess"}
+	LocationKey    = CtxKey{Name: "location"}
+	GroupKey       = CtxKey{Name: "group"}
+	GroupMemberKey = CtxKey{Name: "groupMember"}
 
 	PathGuid = CtxKey{Name: "guid"}
 )

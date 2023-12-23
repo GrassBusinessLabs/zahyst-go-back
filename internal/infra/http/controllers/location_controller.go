@@ -5,6 +5,7 @@ import (
 	"boilerplate/internal/domain"
 	"boilerplate/internal/infra/http/requests"
 	"boilerplate/internal/infra/http/resources"
+	"encoding/json"
 	"log"
 	"net/http"
 )
@@ -91,13 +92,16 @@ func (c LocationController) FindByArea() http.HandlerFunc {
 			InternalServerError(w, err)
 			return
 		}
-		area_points, err := requests.Bind(r, requests.FindByAreaLocationRequest{}, domain.AreaPoints{})
+		req := requests.FindByAreaLocationRequest{}
+		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			log.Printf("LocationController: %s", err)
-			InternalServerError(w, err)
 			return
 		}
-		locations, err := c.locationService.FindByArea(pagination, area_points)
+		points := make(map[string][]map[string]float32)
+		points["UpperLeftPoint"] = []map[string]float32{{"lat": req.UpperLeftPoint["lat"]}, {"lon": req.UpperLeftPoint["lon"]}}
+		points["BottomRightPoint"] = []map[string]float32{{"lat": req.BottomRightPoint["lat"]}, {"lon": req.BottomRightPoint["lon"]}}
+		locations, err := c.locationService.FindByArea(pagination, points)
 		if err != nil {
 			log.Printf("LocationController: %s", err)
 			InternalServerError(w, err)

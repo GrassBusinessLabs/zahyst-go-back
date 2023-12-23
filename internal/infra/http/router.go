@@ -52,6 +52,9 @@ func Router(cont container.Container) http.Handler {
 				apiRouter.Use(cont.AuthMw)
 
 				LocationRouter(apiRouter, cont.LocationController, cont.LocationService)
+				UserRouter(apiRouter, cont.UserController)
+				GroupRouter(apiRouter, cont.GroupController, cont.GroupService)
+				GroupMemberRouter(apiRouter, cont.GroupMemberController, cont.GroupMemberService)
 
 				apiRouter.Handle("/*", NotFoundJSON())
 			})
@@ -135,6 +138,59 @@ func LocationRouter(r chi.Router, lc controllers.LocationController, ls app.Loca
 		apiRouter.With(lpom, omw).Delete(
 			"/{locationId}",
 			lc.Delete(),
+		)
+	})
+}
+
+func GroupRouter(r chi.Router, gc controllers.GroupController, gs app.GroupService) {
+	r.Route("/groups", func(apiRouter chi.Router) {
+		gpom := middlewares.PathObject("groupId", controllers.GroupKey, gs)
+		omw := middlewares.IsOwnerMiddleware[domain.Group](controllers.GroupKey)
+		apiRouter.Post(
+			"/",
+			gc.Save(),
+		)
+		apiRouter.Get(
+			"/list",
+			gc.GetList(),
+		)
+		apiRouter.With(gpom, omw).Get(
+			"/access_code/{groupId}",
+			gc.GetAccessCode(),
+		)
+		apiRouter.With(gpom).Get(
+			"/{groupId}",
+			gc.Detail(),
+		)
+		apiRouter.With(gpom, omw).Put(
+			"/{groupId}",
+			gc.Update(),
+		)
+		apiRouter.With(gpom, omw).Delete(
+			"/{groupId}",
+			gc.Delete(),
+		)
+	})
+}
+
+func GroupMemberRouter(r chi.Router, gmc controllers.GroupMemberController, gms app.GroupMemberService) {
+	r.Route("/members", func(apiRouter chi.Router) {
+		gmpom := middlewares.PathObject("groupMemberId", controllers.GroupMemberKey, gms)
+		apiRouter.Post(
+			"/",
+			gmc.AddGroupMember(),
+		)
+		apiRouter.With(gmpom).Put(
+			"/{groupMemberId}",
+			gmc.ChangeAccessLevel(),
+		)
+		apiRouter.With(gmpom).Delete(
+			"/{groupMemberId}",
+			gmc.DeleteGroupMember(),
+		)
+		apiRouter.Get(
+			"/{groupId}",
+			gmc.GetMembersList(),
 		)
 	})
 }

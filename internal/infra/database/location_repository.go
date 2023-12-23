@@ -28,7 +28,7 @@ type LocationRepository interface {
 	Save(sess domain.Location) (domain.Location, error)
 	Update(location domain.Location) (domain.Location, error)
 	Delete(id uint64) error
-	FindByArea(p domain.Pagination, area_points domain.AreaPoints) (domain.Locations, error)
+	FindByArea(p domain.Pagination, points map[string][]map[string]float32) (domain.Locations, error)
 	FindByUserId(p domain.Pagination, user_id uint64) (domain.Locations, error)
 	FindById(id uint64) (domain.Location, error)
 }
@@ -67,9 +67,9 @@ func (r locationRepository) Delete(id uint64) error {
 	return r.coll.Find(db.Cond{"id": id, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
 }
 
-func (r locationRepository) FindByArea(p domain.Pagination, area_points domain.AreaPoints) (domain.Locations, error) {
+func (r locationRepository) FindByArea(p domain.Pagination, points map[string][]map[string]float32) (domain.Locations, error) {
 	var data []location
-	query := r.coll.Find(db.Cond{"lat >": area_points.Lat1, "lat <": area_points.Lat2, "lon <": area_points.Lon1, "lon >": area_points.Lon2})
+	query := r.coll.Find(db.Cond{"lat >": points["UpperLeftPoint"][0]["lat"], "lat <": points["BottomRightPoint"][0]["lat"], "lon <": points["UpperLeftPoint"][1]["lon"], "lon >": points["BottomRightPoint"][1]["lon"]})
 	res := query.Paginate(uint(p.CountPerPage))
 	err := res.Page(uint(p.Page)).All(&data)
 	if err != nil {

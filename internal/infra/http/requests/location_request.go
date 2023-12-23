@@ -48,12 +48,3 @@ func (r UpdateLocationRequest) ToDomainModel() (interface{}, error) {
 		Lon:         r.Lon,
 	}, nil
 }
-
-func (r FindByAreaLocationRequest) ToDomainModel() (interface{}, error) {
-	return domain.AreaPoints{
-		Lat1: r.UpperLeftPoint["lat"],
-		Lon1: r.UpperLeftPoint["lon"],
-		Lat2: r.BottomRightPoint["lat"],
-		Lon2: r.BottomRightPoint["lon"],
-	}, nil
-}

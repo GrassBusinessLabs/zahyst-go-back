@@ -30,12 +30,16 @@ type Services struct {
 	app.AuthService
 	app.UserService
 	app.LocationService
+	app.GroupService
+	app.GroupMemberService
 }
 
 type Controllers struct {
 	controllers.AuthController
 	controllers.UserController
 	controllers.LocationController
+	controllers.GroupController
+	controllers.GroupMemberController
 }
 
 func New(conf config.Configuration) Container {
@@ -45,14 +49,20 @@ func New(conf config.Configuration) Container {
 	userRepository := database.NewUserRepository(sess)
 	sessionRepository := database.NewSessRepository(sess)
 	locationRepository := database.NewLocationRepository(sess)
+	groupRepository := database.NewGroupRepository(sess)
+	groupMemberRepository := database.NewGroupMemberRepository(sess)
 
 	userService := app.NewUserService(userRepository)
 	authService := app.NewAuthService(sessionRepository, userService, conf, tknAuth)
 	locationService := app.NewLocationService(locationRepository)
+	groupService := app.NewGroupService(groupRepository)
+	groupMemberService := app.NewGroupMemberService(groupMemberRepository, groupRepository)
 
 	authController := controllers.NewAuthController(authService, userService)
 	userController := controllers.NewUserController(userService)
 	locationController := controllers.NewLocationController(locationService)
+	groupController := controllers.NewGroupController(groupService)
+	groupMemberController := controllers.NewGroupMemberController(groupMemberService)
 
 	authMiddleware := middlewares.AuthMiddleware(tknAuth, authService, userService)
 
@@ -64,11 +74,15 @@ func New(conf config.Configuration) Container {
 			authService,
 			userService,
 			locationService,
+			groupService,
+			groupMemberService,
 		},
 		Controllers: Controllers{
 			authController,
 			userController,
 			locationController,
+			groupController,
+			groupMemberController,
 		},
 	}
 }

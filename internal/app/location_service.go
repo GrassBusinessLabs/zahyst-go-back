@@ -10,7 +10,7 @@ type LocationService interface {
 	Save(location domain.Location) (domain.Location, error)
 	Update(location domain.Location) (domain.Location, error)
 	Delete(id uint64) error
-	FindByArea(p domain.Pagination, area_points domain.AreaPoints) (domain.Locations, error)
+	FindByArea(p domain.Pagination, points map[string][]map[string]float32) (domain.Locations, error)
 	FindByUserId(p domain.Pagination, user_id uint64) (domain.Locations, error)
 	Find(uint64) (interface{}, error)
 }
@@ -55,8 +55,8 @@ func (s locationService) Delete(id uint64) error {
 	return nil
 }
 
-func (s locationService) FindByArea(p domain.Pagination, area_points domain.AreaPoints) (domain.Locations, error) {
-	locations, err := s.locationRepo.FindByArea(p, area_points)
+func (s locationService) FindByArea(p domain.Pagination, points map[string][]map[string]float32) (domain.Locations, error) {
+	locations, err := s.locationRepo.FindByArea(p, points)
 	if err != nil {
 		log.Printf("LocationService: %s", err)
 		return domain.Locations{}, err
