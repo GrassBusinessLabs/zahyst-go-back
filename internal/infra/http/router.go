@@ -54,7 +54,7 @@ func Router(cont container.Container) http.Handler {
 				LocationRouter(apiRouter, cont.LocationController, cont.LocationService)
 				UserRouter(apiRouter, cont.UserController)
 				GroupRouter(apiRouter, cont.GroupController, cont.GroupService)
-				GroupMemberRouter(apiRouter, cont.GroupMemberController, cont.GroupMemberService)
+				GroupMemberRouter(apiRouter, cont.GroupMemberController, cont.GroupMemberService, cont.GroupService)
 
 				apiRouter.Handle("/*", NotFoundJSON())
 			})
@@ -107,6 +107,14 @@ func UserRouter(r chi.Router, uc controllers.UserController) {
 		apiRouter.Delete(
 			"/",
 			uc.Delete(),
+		)
+		apiRouter.Put(
+			"/coordinates",
+			uc.SetCoordinates(),
+		)
+		apiRouter.Get(
+			"/coordinates",
+			uc.GetCoordinates(),
 		)
 	})
 }
@@ -173,24 +181,30 @@ func GroupRouter(r chi.Router, gc controllers.GroupController, gs app.GroupServi
 	})
 }
 
-func GroupMemberRouter(r chi.Router, gmc controllers.GroupMemberController, gms app.GroupMemberService) {
+func GroupMemberRouter(r chi.Router, gmc controllers.GroupMemberController, gms app.GroupMemberService, gs app.GroupService) {
 	r.Route("/members", func(apiRouter chi.Router) {
 		gmpom := middlewares.PathObject("groupMemberId", controllers.GroupMemberKey, gms)
+		ismoderator := middlewares.CheckRoleMiddleware([]domain.AccessLevel{domain.ModeratorAccessLevel{}, domain.AdminAccessLevel{}}, gs, gms, "groupId")
+		isadmin := middlewares.CheckRoleMiddleware([]domain.AccessLevel{domain.AdminAccessLevel{}}, gs, gms, "groupId")
 		apiRouter.Post(
 			"/",
 			gmc.AddGroupMember(),
 		)
-		apiRouter.With(gmpom).Put(
-			"/{groupMemberId}",
+		apiRouter.With(gmpom, isadmin).Put(
+			"/{groupId}/{groupMemberId}",
 			gmc.ChangeAccessLevel(),
 		)
-		apiRouter.With(gmpom).Delete(
-			"/{groupMemberId}",
+		apiRouter.With(gmpom, isadmin).Delete(
+			"/{groupId}/{groupMemberId}",
 			gmc.DeleteGroupMember(),
 		)
-		apiRouter.Get(
+		apiRouter.With(ismoderator).Get(
 			"/{groupId}",
 			gmc.GetMembersList(),
+		)
+		apiRouter.With(ismoderator).Post(
+			"/{groupId}",
+			gmc.FindMembersByArea(),
 		)
 	})
 }

@@ -19,6 +19,11 @@ type AuthDto struct {
 	User  UserDto `json:"user"`
 }
 
+type UserCoordinatesDto struct {
+	Lat float32 `json:"lat"`
+	Lon float32 `json:"lon"`
+}
+
 func (d UserDto) DomainToDto(user domain.User) UserDto {
 	return UserDto{
 		Id:    user.Id,

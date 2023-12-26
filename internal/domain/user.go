@@ -9,6 +9,8 @@ type User struct {
 	Name        string
 	Email       string
 	Password    string
+	Lat         float32
+	Lon         float32
 	CreatedDate time.Time
 	UpdatedDate time.Time
 	DeletedDate *time.Time

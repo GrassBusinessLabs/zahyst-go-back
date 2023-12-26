@@ -2,6 +2,7 @@ package database
 
 import (
 	"boilerplate/internal/domain"
+	"fmt"
 	"math"
 	"time"
 
@@ -26,6 +27,8 @@ type GroupMemberRepository interface {
 	GetMembersList(p domain.Pagination, groupId uint64) (domain.GroupMembers, error)
 	FindById(id uint64) (domain.GroupMember, error)
 	DeleteGroupMember(id uint64) error
+	FindMember(userId uint64, groupId uint64) (domain.GroupMember, error)
+	FindMembersByArea(p domain.Pagination, groupId uint64, points map[string]map[string]float32, ur UserRepository) (domain.GroupMembers, error)
 }
 
 type groupMemberRepository struct {
@@ -43,11 +46,18 @@ func (r groupMemberRepository) AddGroupMember(accessCode string, userId uint64, 
 	if err != nil {
 		return domain.GroupMember{}, err
 	}
+	if grp.UserId == userId {
+		return domain.GroupMember{}, fmt.Errorf("creator can`t be the member of the group")
+	}
 	var grpMember groupMember
 	grpMember.GroupId = grp.Id
 	grpMember.UserId = userId
-	grpMember.AccessLevel = "casual"
+	grpMember.AccessLevel = domain.CasualAccessLevel{}.GetRole()
 	grpMember.CreatedDate, grpMember.UpdatedDate = time.Now(), time.Now()
+	exists, err := r.coll.Find(db.Cond{"user_id": grpMember.UserId, "group_id": grpMember.GroupId}).Exists()
+	if err != nil || exists {
+		return domain.GroupMember{}, fmt.Errorf("current user already belong to this group")
+	}
 	err = r.coll.InsertReturning(&grpMember)
 	if err != nil {
 		return domain.GroupMember{}, err
@@ -57,6 +67,9 @@ func (r groupMemberRepository) AddGroupMember(accessCode string, userId uint64, 
 
 func (r groupMemberRepository) ChangeAccessLevel(groupMember domain.GroupMember, newAccessLevel string) (domain.GroupMember, error) {
 	grpMember := r.mapDomainToModel(groupMember)
+	if !domain.GroupMember.AccessLevelExists(domain.GroupMember{}, newAccessLevel) {
+		return domain.GroupMember{}, fmt.Errorf("%s is not an access level", newAccessLevel)
+	}
 	grpMember.AccessLevel = newAccessLevel
 	err := r.coll.Find(db.Cond{"id": grpMember.Id}).Update(&grpMember)
 	if err != nil {
@@ -98,6 +111,38 @@ func (r groupMemberRepository) FindById(id uint64) (domain.GroupMember, error) {
 		return domain.GroupMember{}, err
 	}
 	return r.mapModelToDomain(grpMember), nil
+}
+
+func (r groupMemberRepository) FindMember(userId uint64, groupId uint64) (domain.GroupMember, error) {
+	var grpMember groupMember
+	err := r.coll.Find(db.Cond{"user_id": userId, "group_id": groupId}).One(&grpMember)
+	if err != nil {
+		return domain.GroupMember{}, err
+	}
+	return r.mapModelToDomain(grpMember), nil
+}
+
+func (r groupMemberRepository) FindMembersByArea(p domain.Pagination, groupId uint64, points map[string]map[string]float32, ur UserRepository) (domain.GroupMembers, error) {
+	var data []groupMember
+	usersId := ur.GetUsersIdByArea(points)
+	query := r.coll.Find(db.Cond{"user_id IN": usersId, "group_id": groupId})
+	res := query.Paginate(uint(p.CountPerPage))
+	err := res.Page(uint(p.Page)).All(&data)
+	if err != nil {
+		return domain.GroupMembers{}, err
+	}
+
+	groupMembers := r.mapModelToDomainPagination(data)
+
+	totalCount, err := res.TotalEntries()
+	if err != nil {
+		return domain.GroupMembers{}, err
+	}
+
+	groupMembers.Total = totalCount
+	groupMembers.Pages = uint(math.Ceil(float64(groupMembers.Total) / float64(p.CountPerPage)))
+
+	return groupMembers, nil
 }
 
 func (r groupMemberRepository) mapDomainToModel(d domain.GroupMember) groupMember {

@@ -12,17 +12,21 @@ type GroupMemberService interface {
 	GetMembersList(p domain.Pagination, groupId uint64) (domain.GroupMembers, error)
 	Find(id uint64) (interface{}, error)
 	DeleteGroupMember(id uint64) error
+	FindMember(uint64, uint64) (domain.GroupMember, error)
+	FindMembersByArea(p domain.Pagination, groupId uint64, points map[string]map[string]float32) (domain.GroupMembers, error)
 }
 
 type groupMemberService struct {
 	groupMemberRepo database.GroupMemberRepository
 	groupRepo       database.GroupRepository
+	userRepo        database.UserRepository
 }
 
-func NewGroupMemberService(gmr database.GroupMemberRepository, gr database.GroupRepository) groupMemberService {
+func NewGroupMemberService(gmr database.GroupMemberRepository, gr database.GroupRepository, ur database.UserRepository) groupMemberService {
 	return groupMemberService{
 		groupMemberRepo: gmr,
 		groupRepo:       gr,
+		userRepo:        ur,
 	}
 }
 
@@ -67,11 +71,31 @@ func (s groupMemberService) DeleteGroupMember(id uint64) error {
 }
 
 func (s groupMemberService) Find(id uint64) (interface{}, error) {
-	group, err := s.groupMemberRepo.FindById(id)
+	groupMember, err := s.groupMemberRepo.FindById(id)
 	if err != nil {
 		log.Printf("GroupMemberService: %s", err)
 		return domain.GroupMember{}, err
 	}
 
-	return group, err
+	return groupMember, err
+}
+
+func (s groupMemberService) FindMember(userId uint64, groupId uint64) (domain.GroupMember, error) {
+	groupMember, err := s.groupMemberRepo.FindMember(userId, groupId)
+	if err != nil {
+		log.Printf("GroupMemberService: %s", err)
+		return domain.GroupMember{}, err
+	}
+
+	return groupMember, err
+}
+
+func (s groupMemberService) FindMembersByArea(p domain.Pagination, groupId uint64, points map[string]map[string]float32) (domain.GroupMembers, error) {
+	groupMembers, err := s.groupMemberRepo.FindMembersByArea(p, groupId, points, s.userRepo)
+	if err != nil {
+		log.Printf("GroupMemberService: %s", err)
+		return domain.GroupMembers{}, err
+	}
+
+	return groupMembers, err
 }

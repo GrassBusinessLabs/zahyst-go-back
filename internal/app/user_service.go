@@ -15,6 +15,8 @@ type UserService interface {
 	Update(user domain.User, req domain.User) (domain.User, error)
 	Delete(id uint64) error
 	GeneratePasswordHash(password string) (string, error)
+	GetCoordinates(user domain.User) (float32, float32, error)
+	SetCoordinates(lat float32, lon float32, user domain.User) error
 }
 
 type userService struct {
@@ -88,4 +90,24 @@ func (s userService) Delete(id uint64) error {
 func (s userService) GeneratePasswordHash(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
+}
+
+func (s userService) GetCoordinates(user domain.User) (float32, float32, error) {
+	lat, lon, err := s.userRepo.GetCoordinates(user)
+	if err != nil {
+		log.Printf("UserService: %s", err)
+		return 0, 0, err
+	}
+
+	return lat, lon, err
+}
+
+func (s userService) SetCoordinates(lat float32, lon float32, user domain.User) error {
+	err := s.userRepo.SetCoordinates(lat, lon, user)
+	if err != nil {
+		log.Printf("UserService: %s", err)
+		return err
+	}
+
+	return err
 }

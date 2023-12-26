@@ -27,6 +27,11 @@ type ChangePasswordRequest struct {
 	NewPassword string `json:"newPassword" validate:"required,alphanum,gte=4"`
 }
 
+type SetCoordinatesRequest struct {
+	Lat float32 `json:"lat" validate:"required"`
+	Lon float32 `json:"lon" validate:"required"`
+}
+
 func (r UpdateUserRequest) ToDomainModel() (interface{}, error) {
 	return domain.User{
 		Name: r.Name,

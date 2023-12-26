@@ -56,7 +56,7 @@ func New(conf config.Configuration) Container {
 	authService := app.NewAuthService(sessionRepository, userService, conf, tknAuth)
 	locationService := app.NewLocationService(locationRepository)
 	groupService := app.NewGroupService(groupRepository)
-	groupMemberService := app.NewGroupMemberService(groupMemberRepository, groupRepository)
+	groupMemberService := app.NewGroupMemberService(groupMemberRepository, groupRepository, userRepository)
 
 	authController := controllers.NewAuthController(authService, userService)
 	userController := controllers.NewUserController(userService)

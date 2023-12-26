@@ -98,9 +98,9 @@ func (c LocationController) FindByArea() http.HandlerFunc {
 			log.Printf("LocationController: %s", err)
 			return
 		}
-		points := make(map[string][]map[string]float32)
-		points["UpperLeftPoint"] = []map[string]float32{{"lat": req.UpperLeftPoint["lat"]}, {"lon": req.UpperLeftPoint["lon"]}}
-		points["BottomRightPoint"] = []map[string]float32{{"lat": req.BottomRightPoint["lat"]}, {"lon": req.BottomRightPoint["lon"]}}
+		points := make(map[string]map[string]float32)
+		points["UpperLeftPoint"] = map[string]float32{"lat": req.UpperLeftPoint["lat"], "lon": req.UpperLeftPoint["lon"]}
+		points["BottomRightPoint"] = map[string]float32{"lat": req.BottomRightPoint["lat"], "lon": req.BottomRightPoint["lon"]}
 		locations, err := c.locationService.FindByArea(pagination, points)
 		if err != nil {
 			log.Printf("LocationController: %s", err)
