@@ -106,7 +106,10 @@ func (r userRepository) SetCoordinates(lat float32, lon float32, user domain.Use
 func (r userRepository) GetUsersIdByArea(points map[string]map[string]float32) []uint64 {
 	var users []user
 	query := r.coll.Find(db.Cond{"lat >": points["UpperLeftPoint"]["lat"], "lat <": points["BottomRightPoint"]["lat"], "lon <": points["UpperLeftPoint"]["lon"], "lon >": points["BottomRightPoint"]["lon"]})
-	query.All(&users)
+	err := query.All(&users)
+	if err != nil {
+		return []uint64{}
+	}
 	usersId := make([]uint64, len(users))
 	for i, user := range users {
 		usersId[i] = user.Id

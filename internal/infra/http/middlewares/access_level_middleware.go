@@ -44,7 +44,6 @@ func CheckRoleMiddleware(accessLevels []domain.AccessLevel, groupService app.Gro
 			user := ctx.Value(controllers.UserKey).(domain.User)
 			grpDomain := grp.(domain.Group)
 			if grpDomain.UserId == user.Id {
-				accessGranted = true
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
