@@ -4,8 +4,6 @@ CREATE TABLE IF NOT EXISTS locations
     user_id      INTEGER NOT NULL,
     type         TEXT,
     address      TEXT,
-    title        TEXT,
-    description  TEXT,
     lat          NUMERIC(9, 6),
     lon          NUMERIC(9, 6),
     created_date TIMESTAMP,
